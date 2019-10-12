@@ -1,0 +1,17 @@
+{
+  "extends": ["tslint-microsoft-contrib", "tslint-config-prettier"],
+  "rulesDirectory": ["node_modules/tslint-microsoft-contrib"],
+  "rules": {
+    "no-submodule-imports": false,
+    "no-any": false,
+    "no-import-side-effect": [true, {"ignore-module": "module-alias|\\.css"}],
+    "no-relative-imports": false,
+    "no-backbone-get-set-outside-model": false,
+    "no-single-line-block-comment": false,
+    "react-this-binding-issue": false,
+    "function-name": false,
+    "underscore-consistent-invocation": false,
+    "use-simple-attributes": false,
+    "no-suspicious-comment": [true, ["TODO"]]
+  }
+}
