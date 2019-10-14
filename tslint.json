@@ -16,6 +16,6 @@
     "non-literal-fs-path": false,
     "no-null-keyword": false,
     "no-http-string": false,
-    "no-console": false,
+    "no-console": false
   }
 }

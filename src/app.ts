@@ -77,8 +77,7 @@ app.use((
 //   console.log(res)
 // })
 
-downloadServalPage('1', (err, res) => {
-  console.log(res, err)
+downloadServalPage('1', () => {
 })
 
 

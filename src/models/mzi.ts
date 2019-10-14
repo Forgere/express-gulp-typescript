@@ -15,14 +15,20 @@ interface IRequestOption {
     headers: object;
 }
 
+interface ITaotu {
+    id: string;
+    first: string;
+    name: string;
+}
+
 export interface IImg {
     name: string;
     path: string;
 }
 
 // tslint:disable-next-line: completed-docs
-export function downloadSingleImage(url: string, name: string, cb: Function): void {
-    const location:string = path.join(__dirname, '../public/images')
+export function downloadSingleImage(url: string, id: string, name: string, cb: Function): void {
+    const location:string = path.join(__dirname, `../public/images`)
     const options: IRequestOption = {
         method: 'GET',
         url: url,
@@ -65,12 +71,12 @@ export function downloadSingleImage(url: string, name: string, cb: Function): vo
     })
 }
 
-export function downloadGroup(urls: string[], title: string, callback: Function): void{
+export function downloadGroup(urls: string[], title: string,id: string, callback: Function): void{
     let a: number = 0;
     const vv: Date = new Date();
 
     const q: async.AsyncQueue<unknown> = async.queue((url: string, cb: Function) => {
-        downloadSingleImage(url, title+a.toString(), (err: Error | null, reply: any) => {
+        downloadSingleImage(url, id ,title+a.toString(), (err: Error | null, reply: any) => {
             a = a + 1
             if (err !== null) {
                 cb(err)
@@ -89,10 +95,10 @@ export function downloadGroup(urls: string[], title: string, callback: Function)
         console.log(`图集${title}-${a}张-用时${useTime}ms`);
         callback(null, `图集${title}-${a}张-用时${useTime}ms`);
     });
-
 }
 
 export function downloadSinglePage(url: string, callback: Function): void {
+    const id: string = url.split('com/')[1];
     superagent.get(url)
         .end((err: superagent.ResponseError, res: superagent.Response) => {
             if (res !== undefined && res.text !== undefined) {
@@ -115,7 +121,7 @@ export function downloadSinglePage(url: string, callback: Function): void {
                         const locate: string = index < 10 ? `0${index.toString()}` : index.toString()
                         arr.push(`${pre}${locate}.jpg`);
                     }
-                    downloadGroup(arr,title,callback)
+                    downloadGroup(arr,title,id,callback)
                 }
 
             } else {
@@ -137,7 +143,7 @@ export function downloadServalPage(index: string, callback: Function): void {
     
     q.drain(() => {
       // 完成了队列中的所有任务
-      console.log(`完成所有${a}套下载`)
+      console.info(`完成所有${a}套下载`)
     });
     
     let url: string = `http://www.mzitu.com/page/${index}/`
@@ -156,6 +162,7 @@ export function downloadServalPage(index: string, callback: Function): void {
                     q.push($(element).attr('href'))
                 });
 
+                console.info(`page:${index},taotu:${urls.length}`)
                 callback(null, urls.length)
             }
         })
