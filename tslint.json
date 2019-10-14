@@ -12,6 +12,8 @@
     "function-name": false,
     "underscore-consistent-invocation": false,
     "use-simple-attributes": false,
-    "no-suspicious-comment": [true, ["TODO"]]
+    "no-suspicious-comment": [true, ["TODO"]],
+    "non-literal-fs-path": false,
+    "no-null-keyword": false
   }
 }
