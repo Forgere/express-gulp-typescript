@@ -2,11 +2,8 @@ import async from 'async';
 import cheerio from 'cheerio';
 import fs from "fs";
 import path from "path";
-import redis from "redis";
 import request from "request";
 import * as superagent from 'superagent';
-
-const db: redis.RedisClient = redis.createClient();
 
 interface IRequestOption {
     method: string;
@@ -37,7 +34,7 @@ export function downloadSingleImage(url: string, id: string, name: string, cb: F
         {
             'postman-token': 'f4b7a0fc-9ef4-e7ea-d4b7-f4132fb87380',
             'cache-control': 'no-cache',
-            referer: `http${':'}//www.mzitu.com`,
+            referer: `http://www.mzitu.com`,
         }
     };
 
@@ -63,9 +60,6 @@ export function downloadSingleImage(url: string, id: string, name: string, cb: F
                         name,
                         path: `${location}/${name}.jpg`,
                     }
-                    db.sadd('imgs', JSON.stringify(result), (err: Error | null, reply: any) => {
-                        cb(null, result);
-                    })
                 })
             }
     })
@@ -131,10 +125,10 @@ export function downloadSinglePage(url: string, callback: Function): void {
 }
 
 export function downloadServalPage(index: string, callback: Function): void {
-    let a = 0;
-    const q: async.AsyncQueue<unknown> = async.queue((url: string, cb: Function) => {
+    let a: number = 0;
+    const q: async.AsyncQueue<unknown> = async.queue((uri: string, cb: Function) => {
         a = a + 1
-        downloadSinglePage(url, cb);
+        downloadSinglePage(uri, cb);
     }, 2);
     
     q.empty(() => { 
@@ -161,9 +155,10 @@ export function downloadServalPage(index: string, callback: Function): void {
                     urls.push($(element).attr('href'))
                     q.push($(element).attr('href'))
                 });
-
                 console.info(`page:${index},taotu:${urls.length}`)
                 callback(null, urls.length)
+            } else {
+                downloadServalPage(index, callback);
             }
         })
 }
