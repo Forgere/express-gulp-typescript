@@ -60,6 +60,7 @@ export function downloadSingleImage(url: string, id: string, name: string, cb: F
                         name,
                         path: `${location}/${name}.jpg`,
                     }
+                    cb(null, result);
                 })
             }
     })
