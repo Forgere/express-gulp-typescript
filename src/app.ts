@@ -1,3 +1,4 @@
+import async from 'async';
 import cookieParser from 'cookie-parser';
 import e from "express";
 import createHttpError from 'http-errors';
@@ -9,6 +10,7 @@ const createError: createHttpError.CreateHttpError = createHttpError;
 
 import { index as indexRouter} from './routes/index';
 import { users as usersRouter} from './routes/users';
+
 const app: e.Express = e();
 
 // view engine setup
@@ -77,8 +79,26 @@ app.use((
 //   console.log(res)
 // })
 
-downloadServalPage('1', () => {
-})
+// const a: async.AsyncFunction<unknown> = (cb: Function): void => {
+//   downloadServalPage('1', () => {
+//   })
+//   cb(null, '1')
+// }
 
+// const b: async.AsyncFunction<unknown> = (cb: Function): void => {
+//   downloadServalPage('2', () => {
+//   })
+//   cb(null, '2')
+// }
+
+// async.series([a,b], (err,res) => {
+//   console.log(err, res)
+// })
+
+
+downloadServalPage('1', () => {
+  downloadServalPage('2', () => {
+  })
+})
 
 export {app};

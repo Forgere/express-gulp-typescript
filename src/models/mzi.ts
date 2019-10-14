@@ -5,6 +5,9 @@ import path from "path";
 import request from "request";
 import * as superagent from 'superagent';
 
+const DOWNTAOTU: number = 1;
+const DOWNIMAGE: number = 2;
+
 interface IRequestOption {
     method: string;
     url: string;
@@ -62,6 +65,9 @@ export function downloadSingleImage(url: string, id: string, name: string, cb: F
                     }
                     cb(null, result);
                 })
+                .on('error', () => {
+                    console.log('error')
+                  })
             }
     })
 }
@@ -73,13 +79,9 @@ export function downloadGroup(urls: string[], title: string,id: string, callback
     const q: async.AsyncQueue<unknown> = async.queue((url: string, cb: Function) => {
         downloadSingleImage(url, id ,title+a.toString(), (err: Error | null, reply: any) => {
             a = a + 1
-            if (err !== null) {
-                cb(err)
-            } else {
-                cb(null ,reply)
-            }
+            cb()
         });
-    }, 1);
+    }, DOWNIMAGE);
     
     urls.forEach((element: string) => {
         q.push(element);
@@ -127,10 +129,17 @@ export function downloadSinglePage(url: string, callback: Function): void {
 
 export function downloadServalPage(index: string, callback: Function): void {
     let a: number = 0;
+    const urls: string[] = []
     const q: async.AsyncQueue<unknown> = async.queue((uri: string, cb: Function) => {
-        a = a + 1
-        downloadSinglePage(uri, cb);
-    }, 2);
+        downloadSinglePage(uri, () => {
+            a = a + 1
+            if (a === urls.length) {
+                console.info(`page:${index},taotu:${urls.length}`)
+                callback(null, urls.length)
+            }
+            cb()
+        });
+    }, DOWNTAOTU);
     
     q.empty(() => { 
         console.log('no more tasks wating'); 
@@ -145,7 +154,7 @@ export function downloadServalPage(index: string, callback: Function): void {
     if (parseInt(index, 10) === 1) {
         url = 'http://www.mzitu.com/'
     }
-    const urls: string[] = []
+
     superagent.get(url)
         .end((err: superagent.ResponseError, res: superagent.Response) => {
             if (res !== undefined && res.text !== undefined) {
@@ -156,8 +165,6 @@ export function downloadServalPage(index: string, callback: Function): void {
                     urls.push($(element).attr('href'))
                     q.push($(element).attr('href'))
                 });
-                console.info(`page:${index},taotu:${urls.length}`)
-                callback(null, urls.length)
             } else {
                 downloadServalPage(index, callback);
             }
