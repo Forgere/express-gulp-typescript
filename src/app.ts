@@ -3,13 +3,12 @@ import e from "express";
 import createHttpError from 'http-errors';
 import morgan from 'morgan';
 import path from 'path';
-import { downloadGroup, IImg } from './models/mzi';
+import { downloadServalPage } from './models/mzi';
 
 const createError: createHttpError.CreateHttpError = createHttpError;
 
 import { index as indexRouter} from './routes/index';
 import { users as usersRouter} from './routes/users';
-import redis from 'redis';
 const app: e.Express = e();
 
 // view engine setup
@@ -65,13 +64,22 @@ app.use((
 //   a += 1
 // })
 
-downloadGroup([
-  'https://i5.meizitu.net/2019/08/23b01.jpg',
-  'https://i5.meizitu.net/2019/08/23b02.jpg',
-  'https://i5.meizitu.net/2019/08/23b03.jpg',
-  'https://i5.meizitu.net/2019/08/23b04.jpg',
-],'m',(err: Error, res: string)=>{
-  console.log(res)
+// downloadGroup([
+//   'https://i5.meizitu.net/2019/08/23b01.jpg',
+//   'https://i5.meizitu.net/2019/08/23b02.jpg',
+//   'https://i5.meizitu.net/2019/08/23b03.jpg',
+//   'https://i5.meizitu.net/2019/08/23b04.jpg',
+// ],'m',(err: Error, res: string)=>{
+//   console.log(res)
+// })
+
+// downloadSinglePage('https://www.mzitu.com/195146', (err, res)=>{
+//   console.log(res)
+// })
+
+downloadServalPage('1', (err, res) => {
+  console.log(res, err)
 })
+
 
 export {app};

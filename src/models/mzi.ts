@@ -1,8 +1,10 @@
 import async from 'async';
+import cheerio from 'cheerio';
 import fs from "fs";
 import path from "path";
 import redis from "redis";
 import request from "request";
+import * as superagent from 'superagent';
 
 const db: redis.RedisClient = redis.createClient();
 
@@ -70,9 +72,6 @@ export function downloadGroup(urls: string[], title: string, callback: Function)
     const q: async.AsyncQueue<unknown> = async.queue((url: string, cb: Function) => {
         downloadSingleImage(url, title+a.toString(), (err: Error | null, reply: any) => {
             a = a + 1
-            if (a === urls.length) {
-                callback(null, `图集${title}-${a}张-用时${new Date().getTime() - vv.getTime()}ms`);
-            }
             if (err !== null) {
                 cb(err)
             } else {
@@ -87,7 +86,77 @@ export function downloadGroup(urls: string[], title: string, callback: Function)
 
     q.drain(() => {
         const useTime: number =  new Date().getTime() - vv.getTime();
+        console.log(`图集${title}-${a}张-用时${useTime}ms`);
         callback(null, `图集${title}-${a}张-用时${useTime}ms`);
     });
 
+}
+
+export function downloadSinglePage(url: string, callback: Function): void {
+    superagent.get(url)
+        .end((err: superagent.ResponseError, res: superagent.Response) => {
+            if (res !== undefined && res.text !== undefined) {
+                const $: CheerioStatic = cheerio.load(res.text);
+                const src: string = $('.main-image a img').attr('src')
+                const title: string = $('.main-image a img').attr('alt')
+
+                const navs: Cheerio = $(".pagenavi a span");
+                const page: string | null= $(navs[navs.length-2]).html();
+                const content: string = page === null ? '0' : page.toString();
+                if (!(src !== undefined && src.slice !== undefined)) {
+                    callback(`${url}有问题`)
+
+                } else {
+                    const pre: string = src.slice(0,src.length-6)
+                    const numb: number = parseInt(content, 10)
+                    const arr: string[] = []
+
+                    for (let index: number = 1; index < numb+1; index+= 1) {
+                        const locate: string = index < 10 ? `0${index.toString()}` : index.toString()
+                        arr.push(`${pre}${locate}.jpg`);
+                    }
+                    downloadGroup(arr,title,callback)
+                }
+
+            } else {
+                downloadSinglePage(url,callback)
+            }
+        })
+}
+
+export function downloadServalPage(index: string, callback: Function): void {
+    let a = 0;
+    const q: async.AsyncQueue<unknown> = async.queue((url: string, cb: Function) => {
+        a = a + 1
+        downloadSinglePage(url, cb);
+    }, 2);
+    
+    q.empty(() => { 
+        console.log('no more tasks wating'); 
+    })
+    
+    q.drain(() => {
+      // 完成了队列中的所有任务
+      console.log(`完成所有${a}套下载`)
+    });
+    
+    let url: string = `http://www.mzitu.com/page/${index}/`
+    if (parseInt(index, 10) === 1) {
+        url = 'http://www.mzitu.com/'
+    }
+    const urls: string[] = []
+    superagent.get(url)
+        .end((err: superagent.ResponseError, res: superagent.Response) => {
+            if (res !== undefined && res.text !== undefined) {
+                const $: CheerioStatic = cheerio.load(res.text);
+                const imgs: Cheerio = $('#pins li span a')
+
+                imgs.each((i: number,element: CheerioElement) => {
+                    urls.push($(element).attr('href'))
+                    q.push($(element).attr('href'))
+                });
+
+                callback(null, urls.length)
+            }
+        })
 }
